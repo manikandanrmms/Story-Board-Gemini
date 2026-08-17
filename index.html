@@ -1,0 +1,801 @@
+<link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@500;600;700&family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@500;600&display=swap" rel="stylesheet">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/mammoth/1.4.16/mammoth.browser.min.js"></script>
+
+<style>
+  :root{
+    --bg:#F2F3F7;
+    --surface:#FFFFFF;
+    --surface-alt:#EAECF2;
+    --ink:#12141C;
+    --ink-soft:#5A5F72;
+    --ink-faint:#9296A6;
+    --border:#DDE0E9;
+    --accent:#3A3FBF;
+    --accent-soft:#E7E7FA;
+    --accent-ink:#2B2F94;
+    --teal:#0E8A85;
+    --high:#D0473A;
+    --high-soft:#FBE7E4;
+    --medium:#C97F1C;
+    --medium-soft:#FBEEDB;
+    --low:#2E9B63;
+    --low-soft:#E4F5EC;
+    --radius:10px;
+    --shadow:0 1px 2px rgba(18,20,28,0.04), 0 6px 16px rgba(18,20,28,0.06);
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--ink);font-family:'Inter',system-ui,sans-serif;font-size:14px;line-height:1.45;-webkit-font-smoothing:antialiased;}
+  .mono{font-family:'JetBrains Mono',ui-monospace,monospace;}
+  .display{font-family:'Space Grotesk',system-ui,sans-serif;}
+
+  .app{max-width:1400px;margin:0 auto;padding:28px 28px 60px;}
+
+  /* header */
+  .topbar{display:flex;align-items:flex-end;justify-content:space-between;gap:20px;margin-bottom:22px;flex-wrap:wrap;}
+  .brand{display:flex;align-items:center;gap:12px;}
+  .brand-mark{width:34px;height:34px;border-radius:8px;background:linear-gradient(135deg,var(--accent),var(--teal));display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .brand-mark svg{width:18px;height:18px;}
+  .brand h1{font-family:'Space Grotesk';font-size:19px;font-weight:700;margin:0;letter-spacing:-0.01em;}
+  .brand p{margin:2px 0 0;color:var(--ink-soft);font-size:12.5px;}
+
+  .board-meta{display:flex;gap:18px;align-items:center;color:var(--ink-soft);font-size:12.5px;}
+  .board-meta b{color:var(--ink);font-family:'JetBrains Mono';font-weight:600;}
+
+  /* intake panel */
+  .intake{background:var(--surface);border:1px solid var(--border);border-radius:14px;padding:22px;box-shadow:var(--shadow);margin-bottom:26px;}
+  .intake-row{display:flex;gap:16px;align-items:stretch;flex-wrap:wrap;}
+  .dropzone{flex:1 1 340px;border:1.5px dashed var(--border);border-radius:10px;padding:20px;display:flex;align-items:center;gap:14px;cursor:pointer;transition:.15s;background:var(--bg);}
+  .dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-soft);}
+  .dropzone .icon{width:38px;height:38px;border-radius:8px;background:var(--surface);border:1px solid var(--border);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+  .dropzone .icon svg{width:18px;height:18px;stroke:var(--ink-soft);}
+  .dropzone .txt strong{display:block;font-size:13.5px;}
+  .dropzone .txt span{color:var(--ink-faint);font-size:12px;}
+  .dropzone input{display:none;}
+
+  .intake-actions{display:flex;flex-direction:column;justify-content:center;gap:10px;min-width:220px;}
+  .field-label{font-size:11.5px;text-transform:uppercase;letter-spacing:.06em;color:var(--ink-faint);font-weight:600;margin-bottom:4px;}
+  select.select-sm{width:100%;padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-family:'Inter';font-size:13px;color:var(--ink);}
+  input.select-sm{padding:8px 10px;border-radius:8px;border:1px solid var(--border);background:var(--surface);font-family:'Inter';font-size:13px;color:var(--ink);}
+  input.select-sm:focus,select.select-sm:focus{outline:2px solid var(--accent-soft);border-color:var(--accent);}
+
+
+  .btn{appearance:none;border:none;border-radius:8px;padding:10px 16px;font-family:'Inter';font-weight:600;font-size:13.5px;cursor:pointer;transition:.15s;display:inline-flex;align-items:center;justify-content:center;gap:8px;}
+  .btn-primary{background:var(--ink);color:#fff;}
+  .btn-primary:hover:not(:disabled){background:var(--accent);}
+  .btn-primary:disabled{background:var(--ink-faint);cursor:not-allowed;}
+  .btn-ghost{background:transparent;color:var(--ink-soft);border:1px solid var(--border);}
+  .btn-ghost:hover{border-color:var(--ink);color:var(--ink);}
+  .btn-sm{padding:7px 12px;font-size:12.5px;}
+
+  .status-line{display:flex;align-items:center;gap:10px;margin-top:14px;font-size:12.5px;color:var(--ink-soft);}
+  .spinner{width:14px;height:14px;border-radius:50%;border:2px solid var(--border);border-top-color:var(--accent);animation:spin .7s linear infinite;}
+  @keyframes spin{to{transform:rotate(360deg);}}
+  .error-line{color:var(--high);font-size:12.5px;margin-top:10px;background:var(--high-soft);border-radius:8px;padding:8px 12px;}
+  .success-line{color:var(--low);font-size:12.5px;margin-top:10px;background:var(--low-soft);border-radius:8px;padding:8px 12px;}
+
+
+  /* board */
+  .board-toolbar{display:flex;justify-content:space-between;align-items:center;margin-bottom:14px;flex-wrap:wrap;gap:10px;}
+  .legend{display:flex;gap:14px;flex-wrap:wrap;}
+  .legend span{display:inline-flex;align-items:center;gap:6px;font-size:12px;color:var(--ink-soft);}
+  .dot{width:8px;height:8px;border-radius:50%;display:inline-block;}
+
+  .board{display:flex;gap:16px;overflow-x:auto;padding-bottom:14px;}
+  .column{background:var(--surface-alt);border-radius:14px;padding:12px;min-width:290px;flex:1 1 290px;display:flex;flex-direction:column;max-height:calc(100vh - 260px);}
+  .column.dragover{outline:2px dashed var(--accent);outline-offset:-4px;}
+  .column-head{display:flex;justify-content:space-between;align-items:center;padding:4px 6px 12px;}
+  .column-head .name{font-family:'Space Grotesk';font-weight:600;font-size:14px;}
+  .column-head .count{font-family:'JetBrains Mono';font-size:11.5px;color:var(--ink-faint);background:var(--surface);border:1px solid var(--border);border-radius:20px;padding:1px 8px;}
+  .column-pts{font-size:11px;color:var(--ink-faint);padding:0 6px 8px;font-family:'JetBrains Mono';}
+  .card-list{display:flex;flex-direction:column;gap:10px;overflow-y:auto;padding:2px 2px 6px;}
+  .empty-col{border:1.5px dashed var(--border);border-radius:10px;padding:18px 10px;text-align:center;color:var(--ink-faint);font-size:12px;}
+
+  .card{background:var(--surface);border-radius:10px;border:1px solid var(--border);box-shadow:var(--shadow);padding:12px 12px 12px 14px;cursor:grab;position:relative;border-left:4px solid var(--ink-faint);transition:transform .1s;}
+  .card:hover{transform:translateY(-1px);}
+  .card.dragging{opacity:.4;}
+  .card.high{border-left-color:var(--high);}
+  .card.medium{border-left-color:var(--medium);}
+  .card.low{border-left-color:var(--low);}
+  .card-top{display:flex;justify-content:space-between;align-items:center;margin-bottom:6px;}
+  .ticket-id{font-family:'JetBrains Mono';font-size:11px;color:var(--ink-faint);}
+  .points{font-family:'JetBrains Mono';font-size:11px;background:var(--bg);border-radius:5px;padding:1px 6px;color:var(--ink-soft);}
+  .card-title{font-weight:600;font-size:13.5px;margin:0 0 5px;line-height:1.3;}
+  .card-story{color:var(--ink-soft);font-size:12px;margin:0 0 8px;}
+  .card-bottom{display:flex;justify-content:space-between;align-items:center;gap:8px;flex-wrap:wrap;}
+  .epic-tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;}
+  .prio-tag{font-size:10.5px;font-weight:600;padding:2px 8px;border-radius:20px;display:inline-flex;align-items:center;gap:4px;}
+  .prio-tag.high{background:var(--high-soft);color:var(--high);}
+  .prio-tag.medium{background:var(--medium-soft);color:var(--medium);}
+  .prio-tag.low{background:var(--low-soft);color:var(--low);}
+
+  .add-card-btn{border:1.5px dashed var(--border);border-radius:10px;padding:9px;text-align:center;color:var(--ink-faint);font-size:12px;cursor:pointer;background:transparent;font-family:'Inter';margin-top:2px;}
+  .add-card-btn:hover{border-color:var(--accent);color:var(--accent);}
+
+  /* empty state */
+  .empty-hero{text-align:center;padding:70px 20px;color:var(--ink-faint);}
+  .empty-hero svg{width:40px;height:40px;stroke:var(--ink-faint);margin-bottom:14px;}
+  .empty-hero h3{font-family:'Space Grotesk';color:var(--ink-soft);font-size:15px;margin:0 0 4px;}
+  .empty-hero p{font-size:12.5px;margin:0;}
+
+  /* modal */
+  .overlay{position:fixed;inset:0;background:rgba(18,20,28,0.45);display:flex;align-items:center;justify-content:center;z-index:50;padding:20px;}
+  .modal{background:var(--surface);border-radius:14px;padding:24px;width:100%;max-width:520px;max-height:88vh;overflow-y:auto;box-shadow:0 20px 60px rgba(0,0,0,0.25);}
+  .modal h2{font-family:'Space Grotesk';font-size:16px;margin:0 0 16px;}
+  .form-row{margin-bottom:14px;}
+  .form-row label{display:block;font-size:11.5px;text-transform:uppercase;letter-spacing:.05em;color:var(--ink-faint);font-weight:600;margin-bottom:5px;}
+  .form-row input[type=text],.form-row textarea,.form-row select{width:100%;padding:9px 10px;border-radius:8px;border:1px solid var(--border);font-family:'Inter';font-size:13px;color:var(--ink);background:var(--bg);}
+  .form-row textarea{resize:vertical;min-height:56px;}
+  .two-col{display:grid;grid-template-columns:1fr 1fr;gap:12px;}
+  .criteria-item{display:flex;gap:6px;margin-bottom:6px;}
+  .criteria-item input{flex:1;}
+  .icon-btn{background:transparent;border:none;color:var(--ink-faint);cursor:pointer;font-size:15px;padding:0 4px;}
+  .icon-btn:hover{color:var(--high);}
+  .modal-actions{display:flex;justify-content:space-between;margin-top:18px;gap:10px;}
+  .modal-actions .right{display:flex;gap:8px;}
+
+  ::-webkit-scrollbar{height:8px;width:8px;}
+  ::-webkit-scrollbar-thumb{background:var(--border);border-radius:8px;}
+</style>
+
+<div class="app">
+  <div class="topbar">
+    <div class="brand">
+      <div class="brand-mark">
+        <svg viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="9" rx="1.5"></rect><rect x="14" y="3" width="7" height="5" rx="1.5"></rect><rect x="14" y="12" width="7" height="9" rx="1.5"></rect><rect x="3" y="16" width="7" height="5" rx="1.5"></rect></svg>
+      </div>
+      <div>
+        <h1>Story Board Generator</h1>
+        <p>Upload a requirements doc, get a prioritized backlog</p>
+      </div>
+    </div>
+    <div class="board-meta" id="boardMeta"></div>
+  </div>
+
+  <div class="intake">
+    <div class="intake-row">
+      <label class="dropzone" id="dropzone">
+        <div class="icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><path d="M14 2v6h6"></path></svg>
+        </div>
+        <div class="txt">
+          <strong id="dzTitle">Drop a .docx or .pdf, or click to browse</strong>
+          <span id="dzSub">Requirements doc, PRD, spec, meeting notes — anything with product intent</span>
+        </div>
+        <input type="file" id="fileInput" accept=".pdf,.docx,.doc" />
+      </label>
+      <div class="intake-actions">
+        <div>
+          <div class="field-label">Google Gemini API key</div>
+          <div style="display:flex;gap:6px;">
+            <input class="select-sm" id="apiKeyInput" type="password"
+                   placeholder="AIza..." autocomplete="off"
+                   style="flex:1;min-width:0;">
+            <button class="btn btn-ghost btn-sm" id="toggleKeyBtn" type="button">Show</button>
+          </div>
+          <div style="font-size:11px;color:var(--ink-faint);margin-top:4px;">
+            Used only in this browser session. For a public app, use a server-side proxy.
+          </div>
+        </div>
+        <div>
+          <div class="field-label">Stories per batch</div>
+          <select class="select-sm" id="batchSize">
+            <option value="5">5 (fast)</option>
+            <option value="8" selected>8 (default)</option>
+            <option value="12">12 (thorough)</option>
+          </select>
+        </div>
+        <div style="display:flex;gap:8px;">
+          <button class="btn btn-ghost btn-sm" id="testApiBtn" type="button">Test API</button>
+          <button class="btn btn-primary" id="generateBtn" disabled>Generate story board</button>
+        </div>
+      </div>
+    </div>
+    <div class="status-line" id="statusLine" style="display:none;"><div class="spinner"></div><span id="statusText"></span></div>
+    <div class="error-line" id="errorLine" style="display:none;"></div>
+    <div class="success-line" id="successLine" style="display:none;"></div>
+  </div>
+
+  <div style="font-size:11.5px;color:var(--ink-faint);margin:-14px 0 20px 2px;">
+    This version uses Google Gemini instead of Claude. Your key is kept only in this browser session.
+  </div>
+
+  <div class="board-toolbar" id="boardToolbar" style="display:none;">
+    <div class="legend" id="legend">
+      <span><span class="dot" style="background:var(--high)"></span>High priority</span>
+      <span><span class="dot" style="background:var(--medium)"></span>Medium</span>
+      <span><span class="dot" style="background:var(--low)"></span>Low</span>
+    </div>
+    <div style="display:flex;gap:8px;">
+      <button class="btn btn-ghost btn-sm" id="moreBtn">Generate more stories</button>
+      <button class="btn btn-ghost btn-sm" id="exportBtn">Export CSV</button>
+    </div>
+  </div>
+
+  <div id="boardWrap">
+    <div class="empty-hero" id="emptyHero">
+      <svg viewBox="0 0 24 24" fill="none" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M9 11l3 3L22 4"></path><path d="M21 12v7a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11"></path></svg>
+      <h3>No board yet</h3>
+      <p>Upload a document above to generate your first batch of user stories.</p>
+    </div>
+  </div>
+</div>
+
+<div class="overlay" id="overlay" style="display:none;"></div>
+
+<script>
+(function(){
+  const SPRINTS = ["Backlog","Sprint 1","Sprint 2","Sprint 3"];
+  const PRIORITY_RANK = {High:0, Medium:1, Low:2};
+  const EPIC_PALETTE = [
+    {bg:"#E7E7FA", fg:"#3A3FBF"}, {bg:"#DDF3F1", fg:"#0E8A85"},
+    {bg:"#FBEEDB", fg:"#C97F1C"}, {bg:"#FBE4EE", fg:"#C93B75"},
+    {bg:"#E4EEFB", fg:"#2C6FB0"}, {bg:"#EDE7FB", fg:"#6B3FBF"},
+    {bg:"#E4F5EC", fg:"#2E9B63"}, {bg:"#F5EBDD", fg:"#8A5A2B"}
+  ];
+
+  let stories = [];        // {id, epic, title, story, criteria[], priority, sprint, points}
+  let idCounter = 1;
+  let docPayload = null;   // {kind:'text'|'pdf', text? , base64?}
+  let currentFileName = "";
+  let dragCardId = null;
+  let apiKey = sessionStorage.getItem('storyBoardGeminiKey') || "";
+
+  const el = id => document.getElementById(id);
+  const fileInput = el('fileInput');
+  const dropzone = el('dropzone');
+  const generateBtn = el('generateBtn');
+  const statusLine = el('statusLine');
+  const statusText = el('statusText');
+  const errorLine = el('errorLine');
+  const boardWrap = el('boardWrap');
+  const emptyHero = el('emptyHero');
+  const boardToolbar = el('boardToolbar');
+  const overlay = el('overlay');
+  const boardMeta = el('boardMeta');
+  const apiKeyInput = el('apiKeyInput');
+  const toggleKeyBtn = el('toggleKeyBtn');
+  const testApiBtn = el('testApiBtn');
+
+  apiKeyInput.value = apiKey;
+
+  apiKeyInput.addEventListener('input', () => {
+    apiKey = apiKeyInput.value.trim();
+    if(apiKey) sessionStorage.setItem('storyBoardGeminiKey', apiKey);
+    else sessionStorage.removeItem('storyBoardGeminiKey');
+    updateGenerateState();
+    hideError();
+  });
+
+  toggleKeyBtn.addEventListener('click', () => {
+    const showing = apiKeyInput.type === 'text';
+    apiKeyInput.type = showing ? 'password' : 'text';
+    toggleKeyBtn.textContent = showing ? 'Show' : 'Hide';
+  });
+
+  function updateGenerateState(){
+    generateBtn.disabled = !(docPayload && apiKey);
+  }
+
+  // ---------- file intake ----------
+  dropzone.addEventListener('click', () => fileInput.click());
+  ['dragover','dragenter'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.add('drag'); }));
+  ['dragleave','drop'].forEach(evt => dropzone.addEventListener(evt, e => { e.preventDefault(); dropzone.classList.remove('drag'); }));
+  dropzone.addEventListener('drop', e => {
+    if (e.dataTransfer.files.length) handleFile(e.dataTransfer.files[0]);
+  });
+  fileInput.addEventListener('change', e => { if (e.target.files.length) handleFile(e.target.files[0]); });
+
+  function handleFile(file){
+    const name = file.name.toLowerCase();
+    if(!name.endsWith('.docx') && !name.endsWith('.pdf')){
+      showError('Please upload a .docx or .pdf file.');
+      return;
+    }
+    currentFileName = file.name;
+    el('dzTitle').textContent = file.name;
+    el('dzSub').textContent = (file.size/1024).toFixed(0) + " KB — ready to generate";
+    docPayload = { file };
+    updateGenerateState();
+    hideError();
+  }
+
+  function showError(msg){
+    errorLine.style.display = 'block';
+    errorLine.innerHTML = '';
+    const span = document.createElement('span');
+    span.textContent = msg;
+    errorLine.appendChild(span);
+    const retry = document.createElement('button');
+    retry.textContent = 'Retry';
+    retry.className = 'btn btn-ghost btn-sm';
+    retry.style.marginLeft = '10px';
+    retry.addEventListener('click', () => runGeneration(stories.length === 0));
+    errorLine.appendChild(retry);
+  }
+  function hideError(){
+    errorLine.style.display = 'none';
+    const successLine = el('successLine');
+    if(successLine) successLine.style.display = 'none';
+  }
+
+  function showSuccess(msg){
+    const successLine = el('successLine');
+    successLine.textContent = msg;
+    successLine.style.display = 'block';
+    setTimeout(() => { successLine.style.display = 'none'; }, 5000);
+  }
+
+  function setStatus(msg){
+    if(!msg){ statusLine.style.display='none'; return; }
+    statusLine.style.display='flex';
+    statusText.textContent = msg;
+  }
+
+  async function prepareDocPayload(){
+    const file = docPayload.file;
+    const name = file.name.toLowerCase();
+    if (name.endsWith('.pdf')){
+      const base64 = await fileToBase64(file);
+      return { kind:'pdf', base64 };
+    } else {
+      if (typeof mammoth === 'undefined'){
+        throw new Error('The .docx reader library failed to load (network/CDN issue). Try re-uploading, or convert the file to PDF and upload that instead.');
+      }
+      setStatus('Reading document…');
+      const buf = await file.arrayBuffer();
+      const result = await mammoth.extractRawText({ arrayBuffer: buf });
+      return { kind:'text', text: result.value.slice(0, 18000) };
+    }
+  }
+
+  function fileToBase64(file){
+    return new Promise((resolve, reject) => {
+      const r = new FileReader();
+      r.onload = () => resolve(r.result.split(',')[1]);
+      r.onerror = () => reject(new Error('Could not read file'));
+      r.readAsDataURL(file);
+    });
+  }
+
+  // ---------- Google Gemini API ----------
+  // This version uses the simple REST generateContent endpoint.
+  // For a public production app, move the API request to a server-side function
+  // so the Gemini key is never exposed to the browser.
+
+  const GEMINI_MODEL = 'gemini-2.5-flash';
+  const GEMINI_ENDPOINT = 'https://generativelanguage.googleapis.com/v1beta/models/' +
+                          GEMINI_MODEL + ':generateContent';
+
+  async function testGeminiConnection(){
+    if(!apiKey) throw new Error('Please enter your Google Gemini API key first.');
+    setStatus('Testing Gemini API connection…');
+    testApiBtn.disabled = true;
+
+    try{
+      const resp = await fetch(GEMINI_ENDPOINT + '?key=' + encodeURIComponent(apiKey), {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{
+            parts:[{text:'Reply with exactly: OK'}]
+          }],
+          generationConfig:{
+            temperature:0,
+            maxOutputTokens:10
+          }
+        })
+      });
+
+      if(!resp.ok){
+        let body = '';
+        try { body = await resp.text(); } catch(e) {}
+        throw formatGeminiError(resp.status, body);
+      }
+
+      setStatus(null);
+      showSuccess('Gemini API connection is working. You can generate the story board.');
+    } catch(err){
+      setStatus(null);
+      throw err;
+    } finally {
+      testApiBtn.disabled = false;
+    }
+  }
+
+  testApiBtn.addEventListener('click', async () => {
+    hideError();
+    try{
+      await testGeminiConnection();
+    } catch(err){
+      showError(err.message || 'Could not connect to the Gemini API.');
+    }
+  });
+
+  function formatGeminiError(status, body){
+    let detail = '';
+    try{
+      const parsed = JSON.parse(body);
+      detail = parsed?.error?.message || '';
+    } catch(e) {}
+
+    if(status === 400) return new Error('Gemini rejected the request (400).' + (detail ? ' ' + detail : ' Check the API key and request settings.'));
+    if(status === 401) return new Error('Gemini authentication failed (401). Check that your API key is valid.');
+    if(status === 403) return new Error('Gemini access denied (403). Check API key restrictions and whether the Generative Language API is enabled.');
+    if(status === 404) return new Error('Gemini model/endpoint not found (404). The configured model may not be available for this API.');
+    if(status === 429) return new Error('Gemini rate limit/quota exceeded (429). Please wait or check your Google AI Studio quota.');
+    if(status >= 500) return new Error('Google Gemini server error (' + status + '). Please retry shortly.');
+    return new Error('Gemini API error (' + status + ')' + (detail ? ': ' + detail : '.'));
+  }
+
+  async function prepareGeminiParts(prepared){
+    if(prepared.kind === 'pdf'){
+      return [{
+        inlineData:{
+          mimeType:'application/pdf',
+          data:prepared.base64
+        }
+      }];
+    }
+
+    return [{
+      text:'DOCUMENT CONTENT:\n' + prepared.text
+    }];
+  }
+
+  async function requestStories(n, existingTitles){
+    if(!apiKey) throw new Error('Please enter your Google Gemini API key before generating stories.');
+
+    const prepared = await prepareDocPayload();
+    setStatus('Drafting ' + n + ' user stories with Gemini…');
+
+    const instructions = `You are a senior product manager building a backlog. Read the attached product/requirements document and produce user stories for a Kanban story board.
+
+Generate exactly ${n} NEW stories.
+
+Do not duplicate or closely rephrase these existing story titles:
+${JSON.stringify(existingTitles)}
+
+Each story must contain:
+- epic: short epic/theme name, 2-3 words
+- title: short story title, maximum 8 words
+- story: "As a [role], I want [capability] so that [benefit]."
+- criteria: 2-3 concise acceptance criteria
+- priority: exactly High, Medium, or Low
+- sprint: exactly Backlog, Sprint 1, Sprint 2, or Sprint 3
+- points: exactly 1, 2, 3, 5, 8, or 13
+
+Prioritize based on urgency, dependency order and business value. Put foundational/high-value/blocking work earlier and nice-to-haves in Backlog.
+
+Base stories on real content and intent in the document. If the document is short, add only sensible supporting stories consistent with its domain.
+
+Return ONLY the JSON array.`;
+
+    const documentParts = await prepareGeminiParts(prepared);
+
+    const responseSchema = {
+      type:'ARRAY',
+      items:{
+        type:'OBJECT',
+        properties:{
+          epic:{type:'STRING'},
+          title:{type:'STRING'},
+          story:{type:'STRING'},
+          criteria:{type:'ARRAY', items:{type:'STRING'}},
+          priority:{type:'STRING', enum:['High','Medium','Low']},
+          sprint:{type:'STRING', enum:['Backlog','Sprint 1','Sprint 2','Sprint 3']},
+          points:{type:'INTEGER', enum:[1,2,3,5,8,13]}
+        },
+        required:['epic','title','story','criteria','priority','sprint','points']
+      }
+    };
+
+    const parts = [{text:instructions}, ...documentParts];
+
+    let resp;
+    try{
+      resp = await fetch(GEMINI_ENDPOINT + '?key=' + encodeURIComponent(apiKey), {
+        method:'POST',
+        headers:{'Content-Type':'application/json'},
+        body:JSON.stringify({
+          contents:[{role:'user', parts}],
+          generationConfig:{
+            temperature:0.2,
+            maxOutputTokens:5000,
+            responseMimeType:'application/json',
+            responseSchema
+          }
+        })
+      });
+    } catch(networkErr){
+      throw new Error(
+        'Could not reach the Gemini API. Check your internet connection, browser extensions, VPN, or whether your network blocks Google APIs.'
+      );
+    }
+
+    if(!resp.ok){
+      let body = '';
+      try { body = await resp.text(); } catch(e) {}
+      throw formatGeminiError(resp.status, body);
+    }
+
+    const data = await resp.json();
+    const text = (data.candidates || [])
+      .flatMap(c => c.content?.parts || [])
+      .map(p => p.text || '')
+      .join('')
+      .trim();
+
+    if(!text) throw new Error('Gemini returned an empty response. Please retry.');
+
+    let parsed;
+    try{
+      parsed = JSON.parse(text);
+    } catch(e){
+      const match = text.match(/\[[\s\S]*\]/);
+      if(match){
+        try { parsed = JSON.parse(match[0]); }
+        catch(parseErr){ throw new Error('Gemini returned malformed JSON. Please retry with a smaller batch.'); }
+      } else {
+        throw new Error('Gemini did not return a JSON story list. Please retry.');
+      }
+    }
+
+    if(!Array.isArray(parsed)) throw new Error('Gemini response was not a list of stories.');
+    if(!parsed.length) throw new Error('Gemini returned no stories.');
+
+    return parsed;
+  }
+
+    generateBtn.addEventListener('click', () => runGeneration(true));
+  el('moreBtn').addEventListener('click', () => runGeneration(false));
+
+  async function runGeneration(isFirst){
+    hideError();
+    generateBtn.disabled = true;
+    el('moreBtn').disabled = true;
+    try{
+      const n = parseInt(el('batchSize').value, 10);
+      const existingTitles = stories.map(s => s.title);
+      const raw = await requestStories(n, existingTitles);
+      raw.forEach(item => {
+        stories.push({
+          id: 'US-' + String(idCounter++).padStart(3,'0'),
+          epic: item.epic || 'General',
+          title: item.title || 'Untitled story',
+          story: item.story || '',
+          criteria: Array.isArray(item.criteria) ? item.criteria : [],
+          priority: ['High','Medium','Low'].includes(item.priority) ? item.priority : 'Medium',
+          sprint: SPRINTS.includes(item.sprint) ? item.sprint : 'Backlog',
+          points: Number(item.points) || 3
+        });
+      });
+      setStatus(null);
+      renderBoard();
+    } catch(err){
+      setStatus(null);
+      showError(err.message || 'Something went wrong generating stories.');
+    } finally {
+      updateGenerateState();
+      el('moreBtn').disabled = false;
+    }
+  }
+
+  // ---------- rendering ----------
+  function epicColor(epic){
+    let hash = 0;
+    for(let i=0;i<epic.length;i++) hash = epic.charCodeAt(i) + ((hash<<5)-hash);
+    return EPIC_PALETTE[Math.abs(hash) % EPIC_PALETTE.length];
+  }
+
+  function renderBoard(){
+    if (stories.length === 0){
+      boardWrap.innerHTML = '';
+      boardWrap.appendChild(emptyHero);
+      boardToolbar.style.display = 'none';
+      boardMeta.innerHTML = '';
+      return;
+    }
+    boardToolbar.style.display = 'flex';
+    boardMeta.innerHTML = `<span>${currentFileName ? 'Source: <b>'+escapeHtml(currentFileName)+'</b>' : ''}</span><span><b>${stories.length}</b> stories</span>`;
+
+    boardWrap.innerHTML = '';
+    const board = document.createElement('div');
+    board.className = 'board';
+
+    SPRINTS.forEach(sprint => {
+      const col = document.createElement('div');
+      col.className = 'column';
+      col.dataset.sprint = sprint;
+
+      const items = stories.filter(s => s.sprint === sprint)
+        .sort((a,b) => PRIORITY_RANK[a.priority]-PRIORITY_RANK[b.priority]);
+      const totalPts = items.reduce((a,s)=>a+s.points,0);
+
+      col.innerHTML = `
+        <div class="column-head">
+          <span class="name">${sprint}</span>
+          <span class="count">${items.length}</span>
+        </div>
+        <div class="column-pts">${totalPts} pts</div>
+        <div class="card-list"></div>
+      `;
+      const list = col.querySelector('.card-list');
+      if (items.length === 0){
+        const e = document.createElement('div');
+        e.className = 'empty-col';
+        e.textContent = 'Drop a card here';
+        list.appendChild(e);
+      } else {
+        items.forEach(story => list.appendChild(renderCard(story)));
+      }
+      const addBtn = document.createElement('button');
+      addBtn.className = 'add-card-btn';
+      addBtn.textContent = '+ Add story';
+      addBtn.addEventListener('click', () => openModal(null, sprint));
+      col.appendChild(addBtn);
+
+      col.addEventListener('dragover', e => { e.preventDefault(); col.classList.add('dragover'); });
+      col.addEventListener('dragleave', () => col.classList.remove('dragover'));
+      col.addEventListener('drop', e => {
+        e.preventDefault();
+        col.classList.remove('dragover');
+        if (dragCardId){
+          const s = stories.find(x => x.id === dragCardId);
+          if (s) s.sprint = sprint;
+          dragCardId = null;
+          renderBoard();
+        }
+      });
+
+      board.appendChild(col);
+    });
+
+    boardWrap.appendChild(board);
+  }
+
+  function renderCard(story){
+    const card = document.createElement('div');
+    card.className = 'card ' + story.priority.toLowerCase();
+    card.draggable = true;
+    const ec = epicColor(story.epic);
+    card.innerHTML = `
+      <div class="card-top">
+        <span class="ticket-id">${story.id}</span>
+        <span class="points">${story.points} pts</span>
+      </div>
+      <p class="card-title">${escapeHtml(story.title)}</p>
+      <p class="card-story">${escapeHtml(story.story)}</p>
+      <div class="card-bottom">
+        <span class="epic-tag" style="background:${ec.bg};color:${ec.fg}">${escapeHtml(story.epic)}</span>
+        <span class="prio-tag ${story.priority.toLowerCase()}">${story.priority}</span>
+      </div>
+    `;
+    card.addEventListener('dragstart', () => { dragCardId = story.id; card.classList.add('dragging'); });
+    card.addEventListener('dragend', () => card.classList.remove('dragging'));
+    card.addEventListener('click', () => openModal(story.id));
+    return card;
+  }
+
+  function escapeHtml(str){
+    const d = document.createElement('div');
+    d.textContent = str == null ? '' : String(str);
+    return d.innerHTML;
+  }
+
+  // ---------- modal (add/edit) ----------
+  function openModal(storyId, defaultSprint){
+    const editing = !!storyId;
+    const s = editing ? stories.find(x => x.id === storyId) : {
+      id:'US-' + String(idCounter++).padStart(3,'0'), epic:'General', title:'', story:'',
+      criteria:[''], priority:'Medium', sprint: defaultSprint || 'Backlog', points:3
+    };
+    overlay.style.display = 'flex';
+    overlay.innerHTML = '';
+    const modal = document.createElement('div');
+    modal.className = 'modal';
+    modal.innerHTML = `
+      <h2>${editing ? s.id + ' — Edit story' : 'New story'}</h2>
+      <div class="form-row"><label>Title</label><input type="text" id="f_title" value="${escapeAttr(s.title)}" placeholder="Short story title"></div>
+      <div class="form-row"><label>User story</label><textarea id="f_story" placeholder="As a ..., I want ..., so that ...">${escapeHtml(s.story)}</textarea></div>
+      <div class="two-col">
+        <div class="form-row"><label>Epic</label><input type="text" id="f_epic" value="${escapeAttr(s.epic)}"></div>
+        <div class="form-row"><label>Story points</label>
+          <select id="f_points">${[1,2,3,5,8,13].map(p=>`<option value="${p}" ${p===s.points?'selected':''}>${p}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="two-col">
+        <div class="form-row"><label>Priority</label>
+          <select id="f_priority">${['High','Medium','Low'].map(p=>`<option ${p===s.priority?'selected':''}>${p}</option>`).join('')}</select>
+        </div>
+        <div class="form-row"><label>Sprint</label>
+          <select id="f_sprint">${SPRINTS.map(sp=>`<option ${sp===s.sprint?'selected':''}>${sp}</option>`).join('')}</select>
+        </div>
+      </div>
+      <div class="form-row">
+        <label>Acceptance criteria</label>
+        <div id="criteriaList"></div>
+        <button class="btn btn-ghost btn-sm" id="addCriteria" type="button">+ Add criterion</button>
+      </div>
+      <div class="modal-actions">
+        <div>${editing ? '<button class="btn btn-ghost btn-sm" id="deleteBtn">Delete story</button>' : ''}</div>
+        <div class="right">
+          <button class="btn btn-ghost btn-sm" id="cancelBtn">Cancel</button>
+          <button class="btn btn-primary btn-sm" id="saveBtn">Save</button>
+        </div>
+      </div>
+    `;
+    overlay.appendChild(modal);
+
+    let criteria = (s.criteria && s.criteria.length) ? [...s.criteria] : [''];
+    const criteriaList = modal.querySelector('#criteriaList');
+    function renderCriteria(){
+      criteriaList.innerHTML = '';
+      criteria.forEach((c, i) => {
+        const row = document.createElement('div');
+        row.className = 'criteria-item';
+        row.innerHTML = `<input type="text" value="${escapeAttr(c)}" data-i="${i}"><button class="icon-btn" data-i="${i}" type="button">✕</button>`;
+        criteriaList.appendChild(row);
+      });
+      criteriaList.querySelectorAll('input').forEach(inp => {
+        inp.addEventListener('input', e => criteria[Number(e.target.dataset.i)] = e.target.value);
+      });
+      criteriaList.querySelectorAll('button').forEach(btn => {
+        btn.addEventListener('click', e => {
+          criteria.splice(Number(e.target.dataset.i), 1);
+          if (criteria.length === 0) criteria = [''];
+          renderCriteria();
+        });
+      });
+    }
+    renderCriteria();
+    modal.querySelector('#addCriteria').addEventListener('click', () => { criteria.push(''); renderCriteria(); });
+
+    modal.querySelector('#cancelBtn').addEventListener('click', closeModal);
+    overlay.addEventListener('click', e => { if (e.target === overlay) closeModal(); });
+
+    const delBtn = modal.querySelector('#deleteBtn');
+    if (delBtn) delBtn.addEventListener('click', () => {
+      stories = stories.filter(x => x.id !== s.id);
+      closeModal();
+      renderBoard();
+    });
+
+    modal.querySelector('#saveBtn').addEventListener('click', () => {
+      const updated = {
+        id: s.id,
+        title: modal.querySelector('#f_title').value.trim() || 'Untitled story',
+        story: modal.querySelector('#f_story').value.trim(),
+        epic: modal.querySelector('#f_epic').value.trim() || 'General',
+        points: Number(modal.querySelector('#f_points').value),
+        priority: modal.querySelector('#f_priority').value,
+        sprint: modal.querySelector('#f_sprint').value,
+        criteria: criteria.filter(c => c.trim() !== '')
+      };
+      if (editing){
+        Object.assign(s, updated);
+      } else {
+        stories.push(updated);
+      }
+      closeModal();
+      renderBoard();
+    });
+  }
+
+  function closeModal(){ overlay.style.display = 'none'; overlay.innerHTML = ''; }
+  function escapeAttr(str){ return escapeHtml(str).replace(/"/g,'&quot;'); }
+
+  // ---------- export ----------
+  el('exportBtn').addEventListener('click', () => {
+    const header = ['ID','Sprint','Priority','Points','Epic','Title','User Story','Acceptance Criteria'];
+    const rows = stories.map(s => [
+      s.id, s.sprint, s.priority, s.points, s.epic, s.title, s.story, s.criteria.join(' | ')
+    ]);
+    const csv = [header, ...rows].map(r => r.map(cell => `"${String(cell).replace(/"/g,'""')}"`).join(',')).join('\n');
+    const blob = new Blob([csv], { type:'text/csv' });
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'user_story_backlog.csv';
+    a.click();
+  });
+})();
+</script>
